@@ -50,7 +50,7 @@ export const detect = async (source, model, canvasRef, callback = () => {}) => {
 
   tf.engine().startScope(); // start scoping tf engine
   const [input, xRatio, yRatio] = preprocess(source, modelWidth, modelHeight); // preprocess image
-
+  
   const res = model.net.execute(input); // inference model
   const transRes = res.transpose([0, 2, 1]); // transpose result [b, det, n] => [b, n, det]
   const boxes = tf.tidy(() => {
@@ -82,7 +82,6 @@ export const detect = async (source, model, canvasRef, callback = () => {}) => {
   const boxes_data = boxes.gather(nms, 0).dataSync(); // indexing boxes by nms index
   const scores_data = scores.gather(nms, 0).dataSync(); // indexing scores by nms index
   const classes_data = classes.gather(nms, 0).dataSync(); // indexing classes by nms index
-
   renderBoxes(canvasRef, boxes_data, scores_data, classes_data, [xRatio, yRatio]); // render boxes
   tf.dispose([res, transRes, boxes, scores, classes, nms]); // clear memory
 
@@ -97,7 +96,7 @@ export const detect = async (source, model, canvasRef, callback = () => {}) => {
  * @param {tf.GraphModel} model loaded YOLOv8 tensorflow.js model
  * @param {HTMLCanvasElement} canvasRef canvas reference
  */
-export const detectVideo = (vidSource, model, canvasRef) => {
+export const detectVideo = (vidSource, model, canvasRef, callback = () => {}) => {
   /**
    * Function to detect every frame from video
    */
@@ -109,6 +108,7 @@ export const detectVideo = (vidSource, model, canvasRef) => {
     }
 
     detect(vidSource, model, canvasRef, () => {
+      callback();
       requestAnimationFrame(detectFrame); // get another frame
     });
   };

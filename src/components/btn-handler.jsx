@@ -1,11 +1,9 @@
 import { useState, useRef } from "react";
-import { Webcam } from "../utils/webcam";
 
-const ButtonHandler = ({ imageRef, cameraRef, videoRef }) => {
+const ButtonHandler = ({ imageRef, cameraRef, videoRef, webcam }) => {
   const [streaming, setStreaming] = useState(null); // streaming state
   const inputImageRef = useRef(null); // video input reference
   const inputVideoRef = useRef(null); // video input reference
-  const webcam = new Webcam(); // webcam handler
 
   // closing image
   const closeImage = () => {
@@ -28,7 +26,6 @@ const ButtonHandler = ({ imageRef, cameraRef, videoRef }) => {
     inputVideoRef.current.value = ""; // reset input video
     videoRef.current.style.display = "none"; // hide video
   };
-
   return (
     <div className="btn-container">
       {/* Image Handler */}

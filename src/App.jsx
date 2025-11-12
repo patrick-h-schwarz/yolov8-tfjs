@@ -5,14 +5,18 @@ import Loader from "./components/loader";
 import ButtonHandler from "./components/btn-handler";
 import { detect, detectVideo } from "./utils/detect";
 import "./style/App.css";
+import { Webcam } from "./utils/webcam";
 
 const App = () => {
   const [loading, setLoading] = useState({ loading: true, progress: 0 }); // loading state
   const [model, setModel] = useState({
     net: null,
-    inputShape: [1, 0, 0, 3],
+    inputShape: [1, 0, 0, 3]
   }); // init model & input shape
-
+  const webcam = new Webcam(); // webcam handler
+  const [detections, setDetections] = useState(0)
+  const [detectionStart,setDetectionStart] = useState(undefined)
+  const [devices,setDevices] = useState(undefined)
   // references
   const imageRef = useRef(null);
   const cameraRef = useRef(null);
@@ -21,8 +25,13 @@ const App = () => {
 
   // model configs
   const modelName = "yolov8n";
-
+  function onPlay(){
+    setDetections(0)
+    setDetectionStart(new Date());
+    detectVideo(cameraRef.current, model, canvasRef.current, () => setDetections(function (d) {return (d += 1);}));
+  }
   useEffect(() => {
+    webcam.getDevices().then(devices=>setDevices(devices));
     tf.ready().then(async () => {
       const yolov8 = await tf.loadGraphModel(
         `${window.location.href}/${modelName}_web_model/model.json`,
@@ -58,8 +67,21 @@ const App = () => {
         <p>
           Serving : <code className="code">{modelName}</code>
         </p>
+        <p>
+          Detections : {detections}
+          Time : {detectionStart == undefined ? 0 : (new Date().getTime() - detectionStart.getTime()) / 1000}
+          Per Second :{(detections /  (detectionStart == undefined ? 1 : Math.max((new Date().getTime() - detectionStart.getTime()) / 1000, 1))).toFixed(2)}
+        </p>
+        
+        { devices !== undefined && devices.length > 0 &&
+          <select onChange={(event) => webcam.setDevice(cameraRef.current, event.target.value)}>
+              <option value={undefined} >None</option>
+            {devices.filter(device=> device.label !== "").map(device => 
+              <option value={device.label} >{device.label}</option>
+            )}
+          </select>
+        }
       </div>
-
       <div className="content">
         <img
           src="#"
@@ -70,7 +92,7 @@ const App = () => {
           autoPlay
           muted
           ref={cameraRef}
-          onPlay={() => detectVideo(cameraRef.current, model, canvasRef.current)}
+          onPlay={onPlay}
         />
         <video
           autoPlay
@@ -81,7 +103,7 @@ const App = () => {
         <canvas width={model.inputShape[1]} height={model.inputShape[2]} ref={canvasRef} />
       </div>
 
-      <ButtonHandler imageRef={imageRef} cameraRef={cameraRef} videoRef={videoRef} />
+      <ButtonHandler imageRef={imageRef} cameraRef={cameraRef} videoRef={videoRef} webcam={webcam} />
     </div>
   );
 };

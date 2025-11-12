@@ -20,6 +20,23 @@ export class Webcam {
         });
     } else alert("Can't open Webcam!");
   };
+  
+  async getDevices(){
+    if(!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+        console.error('MediaDevices api not supported!');
+        return Promise.resolve(undefined);
+    }
+    let devices = await navigator.mediaDevices.enumerateDevices();
+    return devices.filter(i=>i.kind === "videoinput")
+  }
+  setDevice(videoRef, deviceId){
+    const constraints = {
+      audio: {deviceId:  undefined},
+      video: {deviceId: deviceId}
+    };
+    navigator.mediaDevices.getUserMedia(constraints).
+      then(stream =>videoRef.srcObject = stream)
+  }
 
   /**
    * Close opened webcam.
