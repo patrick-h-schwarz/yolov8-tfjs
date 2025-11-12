@@ -29,14 +29,6 @@ export class Webcam {
     let devices = await navigator.mediaDevices.enumerateDevices();
     return devices.filter(i=>i.kind === "videoinput")
   }
-  setDevice(videoRef, deviceId){
-    const constraints = {
-      audio: {deviceId:  undefined},
-      video: {deviceId: deviceId}
-    };
-    navigator.mediaDevices.getUserMedia(constraints).
-      then(stream =>videoRef.srcObject = stream)
-  }
 
   /**
    * Close opened webcam.
@@ -50,4 +42,20 @@ export class Webcam {
       videoRef.srcObject = null;
     } else alert("Please open Webcam first!");
   };
+  /**
+   * Set webcam device by deviceId.
+   * @param {HTMLVideoElement} videoRef video tag reference
+   */
+  async setDevice(videoRef, deviceId){
+    if (videoRef.srcObject) {
+      videoRef.srcObject.getTracks().forEach(track => {
+        track.stop();
+      });
+    }
+    const constraints = {
+      video: {deviceId:  deviceId ? {exact: deviceId} : undefined}
+    };
+    var stream = await navigator.mediaDevices.getUserMedia(constraints);
+    videoRef.srcObject = stream;
+  }
 }
